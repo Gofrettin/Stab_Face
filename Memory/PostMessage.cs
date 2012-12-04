@@ -51,6 +51,8 @@ namespace Stab_Face
             str.Replace("{F12}", Convert.ToChar(0x7B).ToString());
             str.Replace("{SHIFTD}", Convert.ToChar(0xC1).ToString());
             str.Replace("{SHIFTU}", Convert.ToChar(0xC2).ToString());
+            str.Replace("{RIGHT}", Convert.ToChar(0x27).ToString());
+            str.Replace("{LEFT}", Convert.ToChar(0x25).ToString());
 
             for (int ix = 1; ix <= str.Length; ++ix)
             {

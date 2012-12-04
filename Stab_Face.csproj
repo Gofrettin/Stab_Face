@@ -57,7 +57,13 @@
     <Compile Include="Memory\MemoryWriter.cs" />
     <Compile Include="Memory\PostMessage.cs" />
     <Compile Include="Misc\Waypoint.cs" />
+    <Compile Include="Units\CombatRoutines\CombatRequest.cs" />
+    <Compile Include="Units\CombatRoutines\CombatRoutine.cs" />
+    <Compile Include="Units\CombatRoutines\RogueRoutine.cs" />
     <Compile Include="Units\Enums.cs" />
+    <Compile Include="Units\LogicStrategies\GeneralWaypointStrategy.cs" />
+    <Compile Include="Units\LogicStrategies\LogicRequest.cs" />
+    <Compile Include="Units\LogicStrategies\LogicStrategy.cs" />
     <Compile Include="Units\Mob.cs" />
     <Compile Include="Units\Player.cs" />
     <Compile Include="Units\Unit.cs" />
@@ -94,7 +100,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Units\CombatRoutines\" />
     <Folder Include="WoW_Process\Spells\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

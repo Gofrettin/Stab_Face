@@ -13,6 +13,8 @@ using Stab_Face.Misc;
 using Stab_Face;
 using Stab_Face.WoW_Process.Buffs;
 using Stab_Face.WoW_Process.Debuffs;
+using Stab_Face.Units.CombatRoutines;
+using Stab_Face.Units.LogicStrategies;
 
 namespace Stab_Face.Units
 {
@@ -26,10 +28,10 @@ namespace Stab_Face.Units
         private Thread Pulse;
 
         // Combat Routine, specific to class
-        // private CombatRoutine cRoutine;
+        private CombatRoutine cRoutine;
         
         // Logic Strategy
-        // private LogicStrategy lStrat
+        private LogicStrategy lStrat;
 
         private List<Buff> buffs;
         private List<Debuff> debuffs;
@@ -42,6 +44,23 @@ namespace Stab_Face.Units
             {
                 this.getObjects();
             }
+
+            // TODO: get correct lStrat at runtime
+            this.lStrat = new GeneralWaypointStrategy();
+
+            // TODO: get correct cRoutine at runtime
+            this.cRoutine = new RogueRoutine();
+
+            // Units
+            units = new List<Unit>();
+
+            Pulse = new Thread(new ThreadStart(doPulse));
+            Pulse.Start();
+        }
+
+        ~Player()  // destructor
+        {
+            Pulse.Abort();
         }
 
         public Boolean isInCombat() {
@@ -62,8 +81,8 @@ namespace Stab_Face.Units
             return MemoryReader.readUInt32(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, this.objBase + PlayerOffsets.HP_OFFSET);
         }
 
-        public UInt64 getTargetGUID() {
-            return MemoryReader.readUInt64(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, objBase + PlayerOffsets.CUR_TARGET_GUID_OFFSET);
+        public Waypoint getTargetLocation() {
+            return this.target.getLocation();
         }
 
         public String getName() {
@@ -107,7 +126,7 @@ namespace Stab_Face.Units
                 return false;
         }
 
-        public void moveToLoc(Waypoint wp)
+        private void moveToLoc(Waypoint wp)
         {
             if (!isInRange(wp, 1.0f))
             {
@@ -142,7 +161,7 @@ namespace Stab_Face.Units
                 Thread.Sleep(5);
 
                 MemoryWriter.WriteMem(Stab_Face.WoW_Process.WoW_Instance.getProcess(), 0xC4D888, new byte[] { (byte)0x04 });
-                MemoryWriter.WriteMem(Stab_Face.WoW_Process.WoW_Instance.getProcess(), 0xC4D888, new byte[] { (byte)0x04 });
+                //MemoryWriter.WriteMem(Stab_Face.WoW_Process.WoW_Instance.getProcess(), 0xC4D888, new byte[] { (byte)0x04 });
 
                 //Thread.Sleep(200);
                 //Debug.Print("Moving: " + isMoving());
@@ -153,7 +172,7 @@ namespace Stab_Face.Units
             }
         }
 
-        public void moveDistance(float d)
+        private void moveDistance(float d)
         {
             // First, update player and target location and save them locally
             Waypoint player_loc = getLocation();
@@ -182,7 +201,7 @@ namespace Stab_Face.Units
             moveToLoc(to_move);
         }
 
-        public void moveInRangeofTarget(float attackRange)
+        private void moveInRangeofTarget(float attackRange)
         {
             // First, update player and target location and save them locally
             Waypoint player_loc = getLocation();
@@ -265,7 +284,7 @@ namespace Stab_Face.Units
 
         }
 
-        public void faceLocation(Waypoint wp)
+        private void faceLocation(Waypoint wp)
         {
             float turnaccuracy = 0.1f;
 
@@ -280,18 +299,50 @@ namespace Stab_Face.Units
             if (f < 0)
                 //add the maximum possible angle (PI x 2) to normalize the negative angle
                 f += (float)(Math.PI * 2);
-            //Debug.Print("Want to face: " + f);
-            //Debug.Print("Facing: " + PlayerFacing);
+            Debug.Print("Want to face: " + f);
+            Debug.Print("Facing: " + PlayerFacing);
 
             if (PlayerFacing < (f + turnaccuracy) && PlayerFacing > (f - turnaccuracy))
             {
                 // We are already facing withing the error margin
+                Debug.Print("Already Facing");
             }
             else
             {
-                MemoryWriter.WriteMem(Stab_Face.WoW_Process.WoW_Instance.getProcess(), PlayerOffsets.FACING, BitConverter.GetBytes(f));
+                double r, l;
+
+                //if our current facing angle, in radians, is greater than
+                //the angle which we desire to face
+                if (PlayerFacing > f)
+                {
+                    //we'd have to turn past North if we're turning left
+                    l = ((2 * Math.PI) - PlayerFacing) + f;
+                    //we don't have to turn past North if we're turning right
+                    r = PlayerFacing - f;
+                }
+                else
+                {
+                    //we don't have to turn past North if we're turning left
+                    l = f - PlayerFacing;
+                    //we have to turn past North if we're turning right
+                    r = PlayerFacing + ((2 * Math.PI) - f);
+                }
+
+                //let's please turn in the direction where we have to spend
+                //the least amount of time turning
+                while (!(this.getFacing() < (f + turnaccuracy) && this.getFacing() > (f - turnaccuracy)))
+                {
+                if (l < r) {
+                    //turnkey = Post.ArrowKeys.Left;
+                    PostMessage.SendKeys((int)Stab_Face.WoW_Process.WoW_Instance.getProcess().MainWindowHandle, "{LEFT}");
+                } else {
+                    //turnkey = Post.ArrowKeys.Right;
+                    PostMessage.SendKeys((int)Stab_Face.WoW_Process.WoW_Instance.getProcess().MainWindowHandle, "{RIGHT}");
+                }
+                }
+                //MemoryWriter.WriteMem(Stab_Face.WoW_Process.WoW_Instance.getProcess(), PlayerOffsets.FACING, BitConverter.GetBytes(f));
                 //Thread.Sleep(10);
-                //PostMessage.SendKeys((int)this.gInstance.getProcess().Handle, "{SPACE}");
+                //PostMessage.SendKeys((int)Stab_Face.WoW_Process.WoW_Instance.getProcess().MainWindowHandle, "{RIGHT}");
             }
         }
 
@@ -313,7 +364,7 @@ namespace Stab_Face.Units
             return (float)Math.Sqrt(Math.Pow((wp_2.getY() - wp_1.getY()), 2.0) + Math.Pow((wp_2.getX() - wp_1.getX()), 2.0));
         }
 
-        public float getFacing()
+        private float getFacing()
         {
             return MemoryReader.readFloat(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, objBase + PlayerOffsets.FACING);
         }
@@ -329,7 +380,7 @@ namespace Stab_Face.Units
             return true;
         }
 
-        public void targetByGUID(UInt64 GUID)
+        private void targetByGUID(UInt64 GUID)
         {
             if (target.getGUID() == GUID)
                 return; // Already targeting
@@ -341,9 +392,9 @@ namespace Stab_Face.Units
                     {
                         MemoryWriter.WriteMem(Stab_Face.WoW_Process.WoW_Instance.getProcess(), 0xB4E2E0, BitConverter.GetBytes(GUID));
                         Thread.Sleep(50);
-                        PostMessage.SendKeys((int)Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, "M");
+                        PostMessage.SendKeys((int)Stab_Face.WoW_Process.WoW_Instance.getProcess().MainWindowHandle, "M");
                         
-                        if (getTargetGUID() == GUID)
+                        if (this.target.getGUID() == GUID)
                             return;
                     }
                     catch (Exception ex) { }
@@ -351,24 +402,24 @@ namespace Stab_Face.Units
             }
         }
 
-        public void castNoGCDByKey(string key)
+        private void castNoGCDByKey(string key)
         {
             Thread.Sleep(35);
-            PostMessage.SendKeys((int)Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, key);
+            PostMessage.SendKeys((int)Stab_Face.WoW_Process.WoW_Instance.getProcess().MainWindowHandle, key);
 
             if (!this.isCasting())
             {
                 int tries = 0; // try and make sure cast went off
                 while (tries < 5)
                 {
-                    PostMessage.SendKeys((int)Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, key);
+                    PostMessage.SendKeys((int)Stab_Face.WoW_Process.WoW_Instance.getProcess().MainWindowHandle, key);
                     Thread.Sleep(10);
                     tries++;
                 }
             }
         }
 
-        public String ToString()
+        public override String ToString()
         {
             String str = "";
             str += "Object Base Pointer: " + this.objBase + "\n";
@@ -382,6 +433,17 @@ namespace Stab_Face.Units
             str += "Y: " + wp.getY() + "\n";
             str += "Z: " + wp.getZ() + "\n";
 
+            foreach (Unit u in units)
+            {
+                str += "Mob GUID: " + ((Mob)u).getGUID() + "\n";
+                str += "Mob HP: " + ((Mob)u).getHP() + "\n";
+                str += "Mob Name: " + ((Mob)u).getName() + "\n";
+                Waypoint mwp = ((Mob)u).getLocation();
+                str += "Mob Location: " + "\n";
+                str += "X: " + mwp.getX() + "\n";
+                str += "Y: " + mwp.getY() + "\n";
+                str += "Z: " + mwp.getZ() + "\n";
+            }
 
             return str;
         }
@@ -389,6 +451,17 @@ namespace Stab_Face.Units
 
         private void getObjects() {
             UInt32 objManagerPointer = MemoryReader.readUInt32(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, 0xB41414);
+            UInt64 curTargetGUID = 0;
+            if(units != null)
+                units.Clear();
+            try
+            {
+                curTargetGUID = MemoryReader.readUInt64(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, objBase + PlayerOffsets.CUR_TARGET_GUID_OFFSET);
+            }
+            catch (Exception ex)
+            {
+            }
+            this.target = null;
             this.GUID = MemoryReader.readUInt64(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, (objManagerPointer + 0xC0));
 
             UInt32 curObj = MemoryReader.readUInt32(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, (objManagerPointer + 0xAC));
@@ -405,14 +478,22 @@ namespace Stab_Face.Units
                             this.objBase = curObj;
                         //Debug.Print("Error catch " + MemoryReader.readFloat(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, (curObj + 0x9C0)));
                     }
-                    else {
+                    else if (curGUID == curTargetGUID)
+                    {
+                        this.target = new Unit(curObj);
+                        // TODO: set null if dead
+                    }
+                    else
+                    {
                         objType = MemoryReader.readUInt32(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, (curObj + 0x14));
                         if (objType == 4)
                         {
+                            //units.Add(new Unit(curObj));
                             //MemoryObjects.Add(new PlayerMemoryObject(curObj));
                         }
                         else
                         {//if(objType == 3) 
+                            units.Add(new Mob(curObj));
                             //MemoryObjects.Add(new MobMemoryObject(curObj));
                         }
                     }
@@ -484,5 +565,44 @@ namespace Stab_Face.Units
         }
          * */
 
+
+        /// <summary>
+        /// The Pulse should be responsible for updating the Buffs/Debuffs
+        /// and calling CombatRoutine and LogicStrategy
+        /// </summary>
+        private void doPulse()
+        {
+            LogicRequest LR;
+            CombatRequest CR;
+
+            while (true)
+            {
+                // Pulse the Logic Strategy
+                //LR = lStrat.getRequest(this);
+
+
+                // Pulse the CombatRoutine strategy
+                if (this.target != null)
+                {
+                    CR = cRoutine.getRequest(this);
+
+                    if (CR.getMove() != null)
+                    {
+                        faceLocation(CR.getMove());
+                        moveToLoc(CR.getMove());
+                    }
+
+                    if (CR.getAbility() != '.')
+                    {
+                        faceLocation(this.target.getLocation());
+                        castNoGCDByKey(CR.getAbility().ToString());
+                        Thread.Sleep(1000); // TODO: Add GCD Logic Just for testing
+                    }
+                }
+
+                getObjects();
+                Thread.Sleep(100);
+            }
+        }
     }
 }

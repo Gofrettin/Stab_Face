@@ -9,7 +9,7 @@ using Stab_Face.Memory;
 
 namespace Stab_Face.Units
 {
-    class Mob : Unit
+    public class Mob : Unit
     {
         public Mob(UInt32 objBase)
             : base(objBase)
@@ -17,12 +17,14 @@ namespace Stab_Face.Units
 
         }
 
-        public Waypoint getLocation()
+        public UInt32 getHP()
         {
-            float X = MemoryReader.readFloat(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, this.objBase + MobOffsets.X);
-            float Y = MemoryReader.readFloat(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, this.objBase + MobOffsets.Y);
-            float Z = MemoryReader.readFloat(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, this.objBase + MobOffsets.Z);
-            return new Waypoint(X, Y, Z);
+            return MemoryReader.readUInt32(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, this.objBase + MobOffsets.HP_OFFSET);
+        }
+
+        public UInt32 getName()
+        {
+            return MemoryReader.readUInt32(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, this.objBase + MobOffsets.NAME);
         }
     }
 }
