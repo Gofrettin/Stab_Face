@@ -8,5 +8,6 @@ namespace Stab_Face.WoW_Process.Offsets {
     {
         public const UInt16 HP_OFFSET = 0xEC0;
         public const UInt16 NAME = 0xDB8;
+        public const UInt16 TARGET_GUID = 0xEA8; //0xC48; // EA8
     }
 }

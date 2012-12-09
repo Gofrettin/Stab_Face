@@ -7,6 +7,8 @@ using System.Collections;
 
 using Stab_Face.Memory;
 using System.Threading;
+using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace Stab_Face.WoW_Process
 {
@@ -14,6 +16,19 @@ namespace Stab_Face.WoW_Process
     public static class WoW_Instance
     {
         private static Process WoW;
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT
+        {
+            public int Left;        // x position of upper-left corner
+            public int Top;         // y position of upper-left corner
+            public int Right;       // x position of lower-right corner
+            public int Bottom;      // y position of lower-right corner
+        }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetWindowRect(int hWnd, out RECT lpRect);
 
         /// <summary>
         /// Attempts to find a single running instance of WoW.
@@ -42,6 +57,16 @@ namespace Stab_Face.WoW_Process
             {
                 return WoW;
             }
+        }
+
+        public static Rectangle getWindowDimensions()
+        {
+            RECT rec;
+            GetWindowRect((int)WoW.MainWindowHandle, out rec);
+
+            Rectangle r = new Rectangle(rec.Left, rec.Top, (rec.Right - rec.Left), (rec.Bottom - rec.Top));
+
+            return r;
         }
     }
 }

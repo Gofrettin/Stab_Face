@@ -74,6 +74,13 @@ namespace Stab_Face.Units.LogicStrategies
 
             foreach( Unit u in p.getNearbyUnits()) {
                 Waypoint uLoc = u.getLocation();
+                if (((Mob)u).getTargetGUID() == p.getGUID())
+                {
+                    // Someone is targeting me!
+                    LR.setTarget(u);
+                    return LR;
+                }
+
                 float distanceToUnit = myLoc.getDistance(uLoc);
                 if (distanceToUnit < 15.0
                     && myLoc.getDistance(currentWP) < 20.0

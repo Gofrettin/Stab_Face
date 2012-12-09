@@ -18,15 +18,16 @@ namespace Stab_Face.Units.CombatRoutines
         public CombatRequest getRequest(Player p)
         {
             CombatRequest CR = new CombatRequest();
-            if (p.isInRange(p.getTargetLocation(), attackRange))
+            Waypoint tar_loc = p.getTargetedUnit().getLocation();
+            if (p.isInRange(tar_loc, attackRange))
             {
                 // Test with sinister strike
                 CR.setAbility('o');
             }
 
-            if (!(p.isInRange(p.getTargetLocation(), attackRange)))
+            if (!(p.isInRange(tar_loc, attackRange)))
             {
-                CR.setMove(p.getTargetLocation());
+                CR.setMove(tar_loc);
                 //Debug.WriteLine("Moving in Range of Target: " + p.getTargetedUnit().getGUID().ToString("X16"));
             }
 

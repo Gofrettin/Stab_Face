@@ -5,6 +5,7 @@ using System.Collections;
 using System.Runtime.InteropServices;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Windows.Forms;
 
 namespace Stab_Face
 {
@@ -50,6 +51,21 @@ namespace Stab_Face
         private static extern int _PostMessage(int hWnd, int msg, int wParam, uint lParam);
         [DllImport("user32.dll", EntryPoint = "MapVirtualKey")]
         private static extern int _MapVirtualKey(int uCode, int uMapType);
+
+        [DllImport("user32.dll")]
+        static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
+
+        // constants for the mouse_input() API function
+        private const int MOUSEEVENTF_MOVE = 0x0001;
+        private const int MOUSEEVENTF_LEFTDOWN = 0x0002;
+        private const int MOUSEEVENTF_LEFTUP = 0x0004;
+        private const int MOUSEEVENTF_RIGHTDOWN = 0x0008;
+        private const int MOUSEEVENTF_RIGHTUP = 0x0010;
+        private const int MOUSEEVENTF_MIDDLEDOWN = 0x0020;
+        private const int MOUSEEVENTF_MIDDLEUP = 0x0040;
+        private const int MOUSEEVENTF_ABSOLUTE = 0x8000;
+
+
         private static Object thisLock = new Object();
 
         /// <summary>
@@ -598,7 +614,26 @@ namespace Stab_Face
             //}
         }
 
+        public static void setCursor(int x, int y) {
+            SetCursorPos(x, y);
+        }
 
+        // simulates movement of the mouse.  parameters specify an
+        // absolute location, with the top left corner being the
+        // origin
+        public static void MoveTo(int x, int y)
+        {
+            mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, x, y, 0, 0);
+        }
+
+
+        // simulates a click-and-release action of the left mouse
+        // button at its current position
+        public static void RightClick()
+        {
+            mouse_event(MOUSEEVENTF_RIGHTDOWN, Control.MousePosition.X, Control.MousePosition.Y, 0, 0);
+            mouse_event(MOUSEEVENTF_RIGHTUP, Control.MousePosition.X, Control.MousePosition.Y, 0, 0);
+        }
 
         /// <summary>
         /// Sends a mouse click to specified window

@@ -26,5 +26,10 @@ namespace Stab_Face.Units
         {
             return MemoryReader.readUInt32(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, this.objBase + MobOffsets.NAME);
         }
+
+        public UInt64 getTargetGUID()
+        {
+            return MemoryReader.readUInt64(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, this.objBase + MobOffsets.TARGET_GUID);
+        }
     }
 }
