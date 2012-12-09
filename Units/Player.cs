@@ -605,6 +605,42 @@ namespace Stab_Face.Units
         }
 
         /// <summary>
+        /// ONLY USE THIS FOR CREATING PROFILES
+        /// </summary>
+        /// <returns></returns>
+        public Unit checkForTarget(Object o)
+        {
+            if (o.GetType().Equals(typeof(CreateProfile)))
+            {
+                UInt64 curTargetGUID = MemoryReader.readUInt64(WoW_Instance.getProcess().Handle, objBase + PlayerOffsets.CUR_TARGET_GUID_OFFSET);
+                if (this.target != null)
+                {
+                    if (((Mob)this.target).getHP() > 0)
+                    {
+                        if (curTargetGUID == this.target.getGUID())
+                        {
+                            return this.target;
+                        }
+                    }
+                }
+
+                getObjects();
+                foreach (Unit u in this.getNearbyUnits())
+                {
+                    if (u.getGUID() == curTargetGUID)
+                    {
+                        this.target = u;
+                        return this.target;
+                    }
+                }
+            }
+
+            this.target = null;
+
+            return this.target;
+        }
+
+        /// <summary>
         /// Cast an ability by keypress.
         /// will not trigger GCD.
         /// </summary>
@@ -642,6 +678,7 @@ namespace Stab_Face.Units
                     Thread.Sleep(10);
                     if (MemoryReader.readUInt64(WoW_Instance.getProcess().Handle, 0x00B4E2C8) == u.getGUID())
                     {
+                        PostMessage.setCursor(((i + 10) + (r.X + (r.Width / 2))), ((j + 10) + (r.Y + (r.Height / 2))));
                         goto End;
                         
                     }

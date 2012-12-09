@@ -48,7 +48,7 @@ namespace Stab_Face.Misc
             recording = true;
             while (recording)
             {
-                Mob m = (Mob)p.getTargetedUnit();
+                Mob m = (Mob)p.checkForTarget(this);
                 if (m != null)
                 {
                     UInt16 fac = m.getFaction();
