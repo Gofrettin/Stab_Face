@@ -13,6 +13,39 @@ namespace Stab_Face
     /// </summary>
     public static class PostMessage
     {
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT
+        {
+            public int Left;        // x position of upper-left corner
+            public int Top;         // y position of upper-left corner
+            public int Right;       // x position of lower-right corner
+            public int Bottom;      // y position of lower-right corner
+        }
+
+        public struct POINT
+        {
+            public int X;
+            public int Y;
+            public POINT(int X, int Y)
+            {
+                this.X = X;
+                this.Y = Y;
+            }
+        }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetWindowRect(int hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetCursorPos(out POINT lpPoint);
+
+        [DllImport("user32.dll")]
+        static extern bool SetCursorPos(int X, int Y);
+
+        // Or use System.Drawing.Point (Forms only)
         [DllImport("user32.dll", EntryPoint = "PostMessage")]
         private static extern int _PostMessage(int hWnd, int msg, int wParam, uint lParam);
         [DllImport("user32.dll", EntryPoint = "MapVirtualKey")]
@@ -273,10 +306,10 @@ namespace Stab_Face
             switch (key.ToLower())
             {
                 case "left":
-                    wParam = 0x41;
-                    lParam = 0x11E0001;
-                    //wParam = 0x25;
-                    //lParam = 0x14B0001;
+                    //wParam = 0x41;
+                    //lParam = 0x11E0001;
+                    wParam = 0x25;
+                    lParam = 0x14B0001;
                     break;
 
                 case "up":
@@ -287,10 +320,10 @@ namespace Stab_Face
                     break;
 
                 case "right":
-                    wParam = 0x44;
-                    lParam = 0x1200001;
-                    //wParam = 0x27;
-                    //lParam = 0x14D0001;
+                    //wParam = 0x44;
+                    //lParam = 0x1200001;
+                    wParam = 0x27;
+                    lParam = 0x14D0001;
                     break;
 
                 case "down":
@@ -350,31 +383,31 @@ namespace Stab_Face
             switch (key.ToLower())
             {
                 case "left":
-                    wParam = 0x41;
-                    lParam = 0x11E0001;
-                    //wParam = 0x25;
-                    //lParam = 0x14B0001;
+                    //wParam = 0x41;
+                    //lParam = 0x11E0001;
+                    wParam = 0x25;
+                    lParam = 0x14B0001;
                     break;
 
                 case "up":
-                    wParam = 0x57;
-                    lParam = 0x1110001;
-                    //wParam = 0x26;
-                    //lParam = 0x1480001;
+                    //wParam = 0x57;
+                    //lParam = 0x1110001;
+                    wParam = 0x26;
+                    lParam = 0x1480001;
                     break;
 
                 case "right":
-                    wParam = 0x44;
-                    lParam = 0x1200001;
-                    //wParam = 0x27;
-                    //lParam = 0x14D0001;
+                    //wParam = 0x44;
+                    //lParam = 0x1200001;
+                    wParam = 0x27;
+                    lParam = 0x14D0001;
                     break;
 
                 case "down":
-                    wParam = 0x53;
-                    lParam = 0x11F0001;
-                    //wParam = 0x28;
-                    //lParam = 0x1500001;
+                    //wParam = 0x53;
+                    //lParam = 0x11F0001;
+                    wParam = 0x28;
+                    lParam = 0x1500001;
                     break;
 
                 case "enter":
@@ -449,6 +482,70 @@ namespace Stab_Face
 
             return true;
             //}
+        }
+
+        public static void LinearSmoothMove(float distance, int steps, string direction)
+        {
+            if (direction.ToLower() == "left")
+                distance *= -1;
+            
+            POINT start; // = GetCursorPosition();
+            GetCursorPos(out start);
+            Debug.WriteLine(start.X);
+
+            // Find the slope of the line segment defined by start and newPosition
+            // Divide by the number of steps
+
+            // Move the mouse to each iterative point.
+            for (int i = 0; i < steps; i++)
+            {
+                SetCursorPos(start.X + (int)((distance / steps) * i), start.Y);
+                //SetCursorPosition(Point.Round(iterPoint));
+                Thread.Sleep(5);
+            }
+        }
+
+        public static bool mouseHold(int hWnd, string button, int x, int y, bool depress)
+        {
+            RECT rec;
+            GetWindowRect(hWnd, out rec);
+            x += rec.Left;
+            y -= rec.Top;
+
+            Debug.WriteLine(x);
+            Debug.WriteLine(y);
+
+            if (button.ToLower() == "left")
+            {
+                if (!depress)
+                {
+                    //Post the WM_LBUTTONDOWN message
+                    if (_PostMessage(hWnd, 0x201, 1, MakeLong(x, y)) == 0)
+                        return false;
+                }
+                else
+                {
+                    //Post the WM_LBUTTONUP message
+                    if (_PostMessage(hWnd, 0x202, 0, MakeLong(x, y)) == 0)
+                        return false;
+                }
+            }
+            else
+            {
+                if (!depress)
+                {
+                    //Post the WM_RBUTTONDOWN message
+                    if (_PostMessage(hWnd, 0x204, 2, MakeLong(x, y)) == 0)
+                        return false;
+                }
+                else
+                {
+                    //Post the WM_RBUTTONUP message
+                    if (_PostMessage(hWnd, 0x205, 0, MakeLong(x, y)) == 0)
+                        return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>

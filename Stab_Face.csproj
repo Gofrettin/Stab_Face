@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -32,10 +33,12 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -56,6 +59,13 @@
     <Compile Include="Memory\MemoryReader.cs" />
     <Compile Include="Memory\MemoryWriter.cs" />
     <Compile Include="Memory\PostMessage.cs" />
+    <Compile Include="Misc\CreateProfile.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Misc\CreateProfile.Designer.cs">
+      <DependentUpon>CreateProfile.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Misc\Profile.cs" />
     <Compile Include="Misc\Waypoint.cs" />
     <Compile Include="Units\CombatRoutines\CombatRequest.cs" />
     <Compile Include="Units\CombatRoutines\CombatRoutine.cs" />
@@ -70,6 +80,7 @@
     <Compile Include="Misc\Utils.cs" />
     <Compile Include="WoW_Process\Buffs\Buff.cs" />
     <Compile Include="WoW_Process\Debuffs\Debuff.cs" />
+    <Compile Include="WoW_Process\Factions\FactionsHostileToAll.cs" />
     <Compile Include="WoW_Process\Offsets\GlobalOffsets.cs" />
     <Compile Include="WoW_Process\Offsets\MobOffsets.cs" />
     <Compile Include="WoW_Process\Offsets\PlayerOffsets.cs" />
@@ -79,6 +90,9 @@
     <Compile Include="WoW_Process\WoW_Instance.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Misc\CreateProfile.resx">
+      <DependentUpon>CreateProfile.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

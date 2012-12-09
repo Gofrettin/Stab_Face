@@ -5,6 +5,7 @@ using System.Text;
 using Stab_Face.Memory;
 using Stab_Face.WoW_Process.Offsets;
 using Stab_Face.Misc;
+using Stab_Face.WoW_Process;
 
 namespace Stab_Face.Units
 {
@@ -18,6 +19,7 @@ namespace Stab_Face.Units
         protected UInt64 targetGUID;
         protected UInt32 unitType;
         protected Unit target;
+        protected UInt16 faction;
 
         public Unit(UInt32 objBase)
         {
@@ -34,7 +36,12 @@ namespace Stab_Face.Units
         /// <returns>GUID of this unit</returns>
         public UInt64 getGUID()
         {
-            return MemoryReader.readUInt64(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, objBase + GlobalOffsets.GUID);
+            return MemoryReader.readUInt64(WoW_Instance.getProcess().Handle, objBase + GlobalOffsets.GUID);
+        }
+
+        public UInt32 getObjBase()
+        {
+            return this.objBase;
         }
 
         /// <summary>
@@ -43,10 +50,17 @@ namespace Stab_Face.Units
         /// <returns></returns>
         public Waypoint getLocation()
         {
-            float X = MemoryReader.readFloat(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, this.objBase + GlobalOffsets.X);
-            float Y = MemoryReader.readFloat(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, this.objBase + GlobalOffsets.Y);
-            float Z = MemoryReader.readFloat(Stab_Face.WoW_Process.WoW_Instance.getProcess().Handle, this.objBase + GlobalOffsets.Z);
+            float X = MemoryReader.readFloat(WoW_Instance.getProcess().Handle, this.objBase + GlobalOffsets.X);
+            float Y = MemoryReader.readFloat(WoW_Instance.getProcess().Handle, this.objBase + GlobalOffsets.Y);
+            float Z = MemoryReader.readFloat(WoW_Instance.getProcess().Handle, this.objBase + GlobalOffsets.Z);
             return new Waypoint(X, Y, Z);
+        }
+
+        public UInt16 getFaction()
+        {
+            //return MemoryReader.readUInt32(WoW_Instance.getProcess().Handle, (MemoryReader.readUInt32(WoW_Instance.getProcess().Handle, (this.objBase + GlobalOffsets.FACTION_1)) + GlobalOffsets.FACTION_2 ));
+            this.faction = MemoryReader.readUInt16(WoW_Instance.getProcess().Handle, this.objBase + GlobalOffsets.FACTION);
+            return this.faction;
         }
 
 

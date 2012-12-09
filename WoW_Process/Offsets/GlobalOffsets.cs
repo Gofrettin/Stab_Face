@@ -11,5 +11,8 @@ namespace Stab_Face.WoW_Process.Offsets {
         public const UInt16 Y = 0x9BC;
         public const UInt16 Z = 0x9C0;
         public const UInt16 FACING = 0x9C4;
+        public const UInt16 FACTION = 0xEF4;
+        public const UInt16 FACTION_1 = 0x120;
+        public const UInt16 FACTION_2 = 0x74;
     }
 }

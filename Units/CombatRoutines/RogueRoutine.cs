@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Stab_Face.Misc;
+using System.Diagnostics;
 
 namespace Stab_Face.Units.CombatRoutines
 {
@@ -26,6 +27,7 @@ namespace Stab_Face.Units.CombatRoutines
             if (!(p.isInRange(p.getTargetLocation(), attackRange)))
             {
                 CR.setMove(p.getTargetLocation());
+                //Debug.WriteLine("Moving in Range of Target: " + p.getTargetedUnit().getGUID().ToString("X16"));
             }
 
             return CR;

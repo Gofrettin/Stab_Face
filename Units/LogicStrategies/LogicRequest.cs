@@ -9,7 +9,7 @@ namespace Stab_Face.Units.LogicStrategies
     public class LogicRequest
     {
         private Waypoint move = null;
-        private UInt64 targetGUID = 0;
+        private Unit target = null;
 
         public LogicRequest()
         {
@@ -26,14 +26,14 @@ namespace Stab_Face.Units.LogicStrategies
             this.move = wp;
         }
 
-        public UInt64 getTarget()
+        public Unit getTarget()
         {
-            return targetGUID;
+            return target;
         }
 
-        public void setTarget(UInt64 GUID)
+        public void setTarget(Unit u)
         {
-            this.targetGUID = GUID;
+            this.target = u;
         }
 
     }
