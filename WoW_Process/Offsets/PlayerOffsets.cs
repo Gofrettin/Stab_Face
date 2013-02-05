@@ -6,6 +6,7 @@ using System.Text;
 namespace Stab_Face.WoW_Process.Offsets {
     public class PlayerOffsets : GlobalOffsets {
         public const UInt16 POWER_OFFSET = 0x1DC0;
+        public const UInt16 ENERGY = 0x1DD8;
         public const UInt16 IS_CASTING_OFFSET = 0x0B4; //0xD5A;
         public const UInt16 IS_CHANNELING_OFFSET = 0x1FB0;
         public const UInt16 CUR_TARGET_GUID_OFFSET = 0x1DB0;
@@ -15,5 +16,6 @@ namespace Stab_Face.WoW_Process.Offsets {
         public const UInt16 DEBUFFS_OFFSET = 0x1EAC;
         public const UInt16 BUFFS_OFFSET = 0x1E2C;
         public const UInt16 IS_MOVING = 0xA2C;
+        public const UInt16 COMBO_POINTS = 0x3089;
     }
 }

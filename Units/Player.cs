@@ -16,6 +16,7 @@ using Stab_Face.WoW_Process.Debuffs;
 using Stab_Face.WoW_Process.Offsets;
 using Stab_Face.Misc;
 using System.Drawing;
+using System.Windows.Forms;
 
 namespace Stab_Face.Units
 {
@@ -114,7 +115,8 @@ namespace Stab_Face.Units
         /// <returns>An unsigned integer value.</returns>
         public UInt32 getHP()
         {
-            return MemoryReader.readUInt32(WoW_Instance.getProcess().Handle, this.objBase + PlayerOffsets.HP_OFFSET);
+            UInt32 hp = MemoryReader.readUInt32(WoW_Instance.getProcess().Handle, this.objBase + PlayerOffsets.HP_OFFSET);
+            return hp;
         }
 
         /// <summary>
@@ -145,9 +147,19 @@ namespace Stab_Face.Units
         /// </summary>
         /// <returns>An unsigned integer value.</returns>
         public UInt32 getPower() {
-            return MemoryReader.readUInt32(WoW_Instance.getProcess().Handle, objBase + PlayerOffsets.POWER_OFFSET);
+            // Testing with a rogue, this will need to verify class before returning.
+            return MemoryReader.ReadBytes(WoW_Instance.getProcess().Handle, this.objBase + PlayerOffsets.ENERGY, 1)[0];
+            //return MemoryReader.readUInt32(WoW_Instance.getProcess().Handle, objBase + PlayerOffsets.POWER_OFFSET);
         }
 
+        /// <summary>
+        /// Rogue specific attribute.
+        /// </summary>
+        /// <returns>Number of combo points on current target.</returns>
+        public UInt16 getComboPoints()
+        {
+            return MemoryReader.ReadBytes(WoW_Instance.getProcess().Handle, this.objBase + PlayerOffsets.COMBO_POINTS, 1)[0];
+        }
         /// <summary>
         /// Gets a buff ID from the specified slot.
         /// </summary>
@@ -198,6 +210,32 @@ namespace Stab_Face.Units
             return false;
         }
 
+        public Boolean isAlive()
+        {
+            if (this.getHP() > 1)
+                return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Checks all nearby units to see if they are targeting this player.
+        /// </summary>
+        /// <returns>A List of units targeting this player.</returns>
+        public List<Unit> getUnitsTargetingPlayer()
+        {
+            List<Unit> lunits = new List<Unit>();
+            foreach (Unit u in this.getNearbyUnits())
+            {
+                Waypoint uLoc = u.getLocation();
+                if (((Mob)u).getTargetGUID() == this.getGUID())
+                {
+                    // Someone is targeting me!
+                    lunits.Add(u);
+                }
+            }
+            return lunits;
+        }
+
         /// <summary>
         /// Attempts to decipher if the Player is moving.
         /// Not sure if working correctly.
@@ -242,6 +280,12 @@ namespace Stab_Face.Units
                 }
                 tries = 0;
                 Thread.Sleep(3);
+                float z = wp.getZ();
+                if (z == 0)
+                {
+                    // For glider imports
+                    z = this.getLocation().getZ();
+                }
                 while (verifyWrite(wp.getZ(), 0xC4D898) == false && tries < 3)
                 {
                     MemoryWriter.WriteMem(WoW_Instance.getProcess(), 0xC4D898, BitConverter.GetBytes(wp.getZ()));
@@ -578,29 +622,6 @@ namespace Stab_Face.Units
         /// <returns>Targeted Unit</returns>
         public Unit getTargetedUnit()
         {
-            /*
-            UInt64 curTargetGUID = MemoryReader.readUInt64(WoW_Instance.getProcess().Handle, objBase + PlayerOffsets.CUR_TARGET_GUID_OFFSET);
-            if (this.target != null)
-            {
-                if (((Mob)this.target).getHP() > 0)
-                {
-                    if (curTargetGUID == this.target.getGUID())
-                    {
-                        return this.target;
-                    }
-                }
-            }
-
-            getObjects();
-            foreach(Unit u in this.getNearbyUnits()) {
-                if(u.getGUID() == curTargetGUID) {
-                    this.target = u;
-                    return this.target;
-                }
-            }
-
-            this.target = null;
-             * */
             return this.target;
         }
 
@@ -670,32 +691,48 @@ namespace Stab_Face.Units
         /// <param name="u"></param>
         private void LootUnit(Unit u)
         {
+            while(this.getLocation().getDistance(u.getLocation()) > 4.0f) {
+                moveToLoc(u.getLocation());
+                Thread.Sleep(200);
+            }
+
+            Boolean foundInteract = false;
+            if (MemoryReader.readUInt64(WoW_Instance.getProcess().Handle, 0x00B4E2C8) == u.getGUID())
+            {
+                foundInteract = true;
+                goto End;
+            }
+
             Rectangle r = WoW_Instance.getWindowDimensions();
 
-            for(int i = -100; i < 200; i+=25) {
-                for(int j = -100; j < 100; j+=25) {
+            for(int i = -50; i < 50; i+=25) {
+                for(int j = -25; j < 75; j+=25) {
                     PostMessage.setCursor((i + (r.X + (r.Width / 2))), (j + (r.Y + (r.Height / 2))));
-                    Thread.Sleep(10);
+                    Thread.Sleep(200);
                     if (MemoryReader.readUInt64(WoW_Instance.getProcess().Handle, 0x00B4E2C8) == u.getGUID())
                     {
-                        PostMessage.setCursor(((i + 10) + (r.X + (r.Width / 2))), ((j + 10) + (r.Y + (r.Height / 2))));
+                        PostMessage.setCursor(((i+3) + (r.X + (r.Width / 2))), ((j+6) + (r.Y + (r.Height / 2))));
+                        foundInteract = true;
                         goto End;
-                        
                     }
                 }
             }
             End:
 
-            for (int i = 0; i < 10; i++)
+            if (foundInteract == true)
             {
-                PostMessage.SendKeys((int)WoW_Instance.getProcess().MainWindowHandle, "{SHIFTD}");
-                Thread.Sleep(100);
-                PostMessage.SendKeys((int)WoW_Instance.getProcess().MainWindowHandle, "{SHIFTD}");
-                Thread.Sleep(100);
-                PostMessage.RightClick();
-            }
+                for (int i = 0; i < 3; i++)
+                {
+                    PostMessage.SendKeys((int)WoW_Instance.getProcess().MainWindowHandle, "{SHIFTD}");
+                    Thread.Sleep(100);
+                    PostMessage.SendKeys((int)WoW_Instance.getProcess().MainWindowHandle, "{SHIFTD}");
+                    Thread.Sleep(100);
+                    PostMessage.RightClick();
+                    Thread.Sleep(200);
+                }
 
-            PostMessage.SendKeys((int)WoW_Instance.getProcess().MainWindowHandle, "{SHIFTU}");
+                PostMessage.SendKeys((int)WoW_Instance.getProcess().MainWindowHandle, "{SHIFTU}");
+            }
         }
 
         /// <summary>
@@ -819,68 +856,93 @@ namespace Stab_Face.Units
 
             while (true)
             {
-                // Populate all nearby units before doing anything else
-                getObjects();
-
-                /* Pulse the Logic Strategy
-                 * This should return a request containing
-                 * either a movement location or a unit to target.
-                */
-
-                // If we have no target, move to a new location while looking for a target
-                if (this.target == null) 
+                try
                 {
-                    LR = lStrat.getRequest(this);
+                    // Populate all nearby units before doing anything else
+                    getObjects();
 
-                    // Found a target, set it and move on to the combat strategy.
-                    if (LR.getTarget() != null)
+
+                    // Out of combat stuff
+                    if(this.isAlive()) 
                     {
-                        target = LR.getTarget();
-                        Debug.WriteLine("Targeting: " + LR.getTarget().getGUID().ToString("X16"));
-                        this.targetUnit(LR.getTarget());
-                    }
-                    // Found no target, try moving instead
-                    else if (LR.getMove() != null)
-                    {
-                        moveToLoc(LR.getMove());
-                    }
-                }
-
-                /* Pulse the CombatRoutine strategy
-                 * This should loop until the current target dies.
-                 * This logic may change in the future but it is simple
-                 * enough for now.
-                */
-
-                // We have a target
-                if (this.target != null)
-                {
-                    while (((Mob)this.target).getHP() > 0)
-                    {
-                        CR = cRoutine.getRequest(this);
-
-                        if (CR.getMove() != null)
+                        // TODO: eat / drink call to cRoutine
+                        while (((float)this.getHP() / (float)this.getMaxHP()) < 0.9f && this.isInCombat() == false)
                         {
-                            moveToLoc(CR.getMove());
-                        }
-
-                        if (CR.getAbility() != '.')
-                        {
-                            faceLocation(this.target.getLocation());
-                            castNoGCDByKey(CR.getAbility().ToString());
-                            Thread.Sleep(1000); // TODO: Add GCD Logic Just for testing
+                            Thread.Sleep(200);
                         }
                     }
 
-                    // LOOOOOOOTS
-                    LootUnit(this.target);
 
-                    // Remove our current target since it is dead.
-                    this.target = null;
+                    /* Pulse the Logic Strategy
+                     * This should return a request containing
+                     * either a movement location or a unit to target.
+                    */
+
+                    // If we have no target, move to a new location while looking for a target
+                    if (this.target == null)
+                    {
+                        LR = lStrat.getRequest(this);
+
+                        // Found a target, set it and move on to the combat strategy.
+                        if (LR.getTarget() != null)
+                        {
+                            target = LR.getTarget();
+                            Debug.WriteLine("Targeting: " + LR.getTarget().getGUID().ToString("X16"));
+                            this.targetUnit(LR.getTarget());
+                        }
+                        // Found no target, try moving instead
+                        else if (LR.getMove() != null)
+                        {
+                            moveToLoc(LR.getMove());
+                        }
+                    }
+
+                    /* Pulse the CombatRoutine strategy
+                     * This should loop until the current target dies.
+                     * This logic may change in the future but it is simple
+                     * enough for now.
+                    */
+
+                    // We have a target
+                    if (this.target != null)
+                    {
+                        while (((Mob)this.target).getHP() > 0 && this.isAlive())
+                        {
+                            Thread.Sleep(100);
+                            CR = cRoutine.getRequest(this);
+
+                            if (CR.getMove() != null)
+                            {
+                                moveToLoc(CR.getMove());
+                            }
+
+                            if (CR.getAbility() != '.')
+                            {
+                                faceLocation(this.target.getLocation());
+                                castNoGCDByKey(CR.getAbility().ToString());
+                                Thread.Sleep(1000); // TODO: Add GCD Logic Just for testing
+                            }
+                        }
+
+                        // LOOOOOOOTS
+                        Thread.Sleep(50);
+                        //if(!this.isInCombat())
+                        if (this.getUnitsTargetingPlayer().Count < 1 && this.isAlive())
+                            LootUnit(this.target);
+
+                        // Remove our current target since it is dead.
+                        this.target = null;
+                    }
+
+                    // wait before next pulse is sent
+                    Thread.Sleep(100);
                 }
-
-                // wait before next pulse is sent
-                Thread.Sleep(100);
+                catch (Exception ex)
+                {
+                    // TODO
+                    Debug.Print("Exception in main Pulse: " + ex.Message);
+                    Debug.Print("From: " + ex.TargetSite);
+                }
             }
         }
     }

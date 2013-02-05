@@ -17,14 +17,30 @@ namespace Stab_Face
     {
         Player player;
         Profile profile;
+        DebugWindow dbg;
         
         public MainForm()
         {
             InitializeComponent();
-            this.stop.Enabled = false;
+            this.Stop.Enabled = false;
+
+            // Setup the debug window
+            dbg = DebugWindow.getDebugWindow();
+            TextBoxTraceListener traceWindow = TextBoxTraceListener.getTraceListener(dbg.getMainDebugOutputTextBox());
+            Trace.Listeners.Add(traceWindow);
+            DebugWindow.getDebugWindow().Show();
+
+            Debug.Print("Test");
         }
 
-        private void start_Click(object sender, EventArgs e)
+        protected virtual void On_NPFC(Object o, EventArgs e)
+        {
+            //this.profile = ((CreateProfile)o).getProfile();
+            this.profile = Profile.Load(AppDomain.CurrentDomain.BaseDirectory + "\\Profiles\\" + ((CreateProfile)o).getProfile().getName() + ".xml");
+            o = null;
+        }
+
+        private void startToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (this.profile == null)
             {
@@ -35,54 +51,60 @@ namespace Stab_Face
             {
                 player = new Player(0);
                 player.start(profile);
-                this.start.Enabled = false;
-                this.stop.Enabled = true;
+                this.Start.Enabled = false;
+                this.Stop.Enabled = true;
             }
         }
 
-        private void stop_Click(object sender, EventArgs e)
+        private void stopToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (player != null)
             {
                 player.stop();
                 player = null;
-                this.start.Enabled = true;
-                this.stop.Enabled = false;
+                this.Start.Enabled = true;
+                this.Stop.Enabled = false;
             }
         }
 
-        /// <summary>
-        /// Create a new Profile via NewProfile Form
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void NewProfile_Click(object sender, EventArgs e)
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            stopToolStripMenuItem_Click(sender, e);
+            Application.Exit();
+        }
+
+        private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
             CreateProfile cp = new CreateProfile(this);
             cp.ShowDialog();
             cp.FormClosed += new FormClosedEventHandler(On_NPFC);
         }
 
-        protected virtual void On_NPFC(Object o, EventArgs e)
-        {
-            this.profile = ((CreateProfile)o).getProfile();
-            o = null;
-        }
-
-        /// <summary>
-        /// Load a Saved Profile
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void LoadProfile_Click(object sender, EventArgs e)
+        private void loadProfileToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = "xml files (*.xml)|*.xml";
-            dialog.InitialDirectory = Directory.GetCurrentDirectory() + "\\Profiles"; 
+            dialog.InitialDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\Profiles";
             dialog.Title = "Select a Profile";
 
             if (dialog.ShowDialog() == DialogResult.OK)
-                 profile = Profile.Load(dialog.FileName);
+                profile = Profile.Load(dialog.FileName);
+        }
+
+        private void loadGliderProfileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.Filter = "xml files (*.xml)|*.xml";
+            dialog.InitialDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\Profiles";
+            dialog.Title = "Select a Profile";
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+                profile = Profile.LoadGliderProfile(dialog.FileName);
+        }
+
+        private void debugWindowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DebugWindow.getDebugWindow().Show();
         }
     }
 }

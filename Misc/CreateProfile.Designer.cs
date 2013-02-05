@@ -33,6 +33,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.start = new System.Windows.Forms.Button();
             this.stop = new System.Windows.Forms.Button();
+            this.ghostCheckBox = new System.Windows.Forms.CheckBox();
+            this.normalCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // richTextBox1
@@ -81,11 +83,35 @@
             this.stop.UseVisualStyleBackColor = true;
             this.stop.Click += new System.EventHandler(this.stop_Click);
             // 
+            // ghostCheckBox
+            // 
+            this.ghostCheckBox.AutoSize = true;
+            this.ghostCheckBox.Location = new System.Drawing.Point(15, 156);
+            this.ghostCheckBox.Name = "ghostCheckBox";
+            this.ghostCheckBox.Size = new System.Drawing.Size(54, 17);
+            this.ghostCheckBox.TabIndex = 5;
+            this.ghostCheckBox.Text = "Ghost";
+            this.ghostCheckBox.UseVisualStyleBackColor = true;
+            this.ghostCheckBox.CheckedChanged += new System.EventHandler(this.ghostCheckBox_CheckedChanged);
+            // 
+            // normalCheckBox
+            // 
+            this.normalCheckBox.AutoSize = true;
+            this.normalCheckBox.Location = new System.Drawing.Point(15, 179);
+            this.normalCheckBox.Name = "normalCheckBox";
+            this.normalCheckBox.Size = new System.Drawing.Size(59, 17);
+            this.normalCheckBox.TabIndex = 6;
+            this.normalCheckBox.Text = "Normal";
+            this.normalCheckBox.UseVisualStyleBackColor = true;
+            this.normalCheckBox.CheckedChanged += new System.EventHandler(this.normalCheckBox_CheckedChanged);
+            // 
             // CreateProfile
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(278, 255);
+            this.Controls.Add(this.normalCheckBox);
+            this.Controls.Add(this.ghostCheckBox);
             this.Controls.Add(this.stop);
             this.Controls.Add(this.start);
             this.Controls.Add(this.label1);
@@ -105,5 +131,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button start;
         private System.Windows.Forms.Button stop;
+        private System.Windows.Forms.CheckBox ghostCheckBox;
+        private System.Windows.Forms.CheckBox normalCheckBox;
     }
 }

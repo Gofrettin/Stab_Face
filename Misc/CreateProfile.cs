@@ -44,26 +44,48 @@ namespace Stab_Face.Misc
             profile = new Profile();
             profile.setName(this.name.Text);
             Player p = new Player(0);
-            profile.AddWaypoint(p.getLocation());
+
             recording = true;
             while (recording)
             {
-                Mob m = (Mob)p.checkForTarget(this);
-                if (m != null)
+                if (this.normalCheckBox.Checked)
                 {
-                    UInt16 fac = m.getFaction();
-                    if (profile.getFactions().Contains(fac) == false)
+                    Thread.Sleep(100);
+                    Mob m = (Mob)p.checkForTarget(this);
+                    if (m != null)
                     {
-                        profile.addFaction(fac);
-                        Debug.WriteLine("Added Faction: " + fac);
+                        UInt16 fac = m.getFaction();
+                        if (profile.getFactions().Contains(fac) == false)
+                        {
+                            profile.addFaction(fac);
+                        }
+                    }
+
+                    Waypoint pLoc = p.getLocation();
+                    if (profile.getWaypoints().Count == 0)
+                    {
+                        profile.AddWaypoint(pLoc);
+                    }
+                    else if (profile.getWaypoints().Last<Waypoint>().getDistance(pLoc) > 10.0f)
+                    {
+                        profile.AddWaypoint(pLoc);
                     }
                 }
-
-                Waypoint pLoc = p.getLocation();
-                if (profile.getWaypoints().Last<Waypoint>().getDistance(pLoc) > 10.0f)
+                else if (this.ghostCheckBox.Checked)
                 {
-                    profile.AddWaypoint(pLoc);
-                    Debug.WriteLine("Added Waypoint: " + pLoc.ToString());
+                    Waypoint pLoc = p.getLocation();
+                    if (profile.getGhostWaypoints().Count == 0)
+                    {
+                        profile.AddGhostWaypoint(pLoc);
+                    }
+                    else if (profile.getGhostWaypoints().Last<Waypoint>().getDistance(pLoc) > 10.0f)
+                    {
+                        profile.AddGhostWaypoint(pLoc);
+                    }
+                }
+                else
+                {
+
                 }
             }
         }
@@ -91,6 +113,22 @@ namespace Stab_Face.Misc
             recordThread.Abort();
             profile.Save();
             this.Close();
+        }
+
+        private void normalCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (this.normalCheckBox.Checked)
+            {
+                this.ghostCheckBox.Checked = false;
+            }
+        }
+
+        private void ghostCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (this.ghostCheckBox.Checked)
+            {
+                this.normalCheckBox.Checked = false;
+            }
         }
     }
 }
