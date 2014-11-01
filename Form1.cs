@@ -49,7 +49,7 @@ namespace Stab_Face
             }
             if (player == null)
             {
-                player = new Player(0);
+                player = new Player(0,false);
                 player.start(profile);
                 this.Start.Enabled = false;
                 this.Stop.Enabled = true;
