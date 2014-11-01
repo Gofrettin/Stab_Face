@@ -40,7 +40,7 @@ namespace Stab_Face.Units
         private List<Buff> buffs;
         private List<Debuff> debuffs;
 
-        public Player(UInt32 objBase)
+        public Player(UInt32 objBase,bool ManualControl)
             : base(objBase)
         {
             // Find the current player object
@@ -59,7 +59,9 @@ namespace Stab_Face.Units
             units = new List<Unit>();
 
             // Thread to run user logic
-            Pulse = new Thread(new ThreadStart(doPulse));
+            if (!ManualControl) { 
+                Pulse = new Thread(new ThreadStart(doPulse)); 
+            }
         }
 
         /// <summary>
@@ -775,7 +777,7 @@ namespace Stab_Face.Units
         /// Iterates over all the nearby game objects
         /// and adds them to the proper List.
         /// </summary>
-        private void getObjects() {
+        public void getObjects() {
             UInt32 objManagerPointer = MemoryReader.readUInt32(WoW_Instance.getProcess().Handle, 0xB41414);
             //UInt64 curTargetGUID = 0;
             if(units != null)

@@ -43,7 +43,7 @@ namespace Stab_Face.Misc
 
             profile = new Profile();
             profile.setName(this.name.Text);
-            Player p = new Player(0);
+            Player p = new Player(0,false);
 
             recording = true;
             while (recording)
